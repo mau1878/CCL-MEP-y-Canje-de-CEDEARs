@@ -71,10 +71,15 @@ if st.button("Enter"):
                 # Label using "CEDEAR ARS" without ".BA" suffix
                 labels.append(row["CEDEAR ARS"].replace(".BA", ""))
         
-        # Normalize sizes for better visualization
+        # Convert sizes to numpy array for manipulation
         sizes = np.array(sizes)
-        sizes = (sizes - np.min(sizes)) / (np.max(sizes) - np.min(sizes)) * 100  # Normalize to a range [0, 100]
+        
+        # Apply logarithmic scaling to sizes to better handle a wide range of values
+        sizes = np.log1p(sizes)  # log1p is log(1 + x) to handle zero values
 
+        # Normalize sizes to range [0, 100] for plotting
+        sizes = (sizes - np.min(sizes)) / (np.max(sizes) - np.min(sizes)) * 100
+        
         # Calculate averages for X and Y axes
         x_avg = np.mean(x_values)
         y_avg = np.mean(y_values)
@@ -107,7 +112,7 @@ if st.button("Enter"):
         fig.update_traces(hovertemplate="<b>%{text}</b><br>Price: %{x}<br>Volume: %{y}<br>Size: %{marker.size}",
                           hoverlabel=dict(font_size=hover_font_size))
 
-        # Add sliders for adjusting percentiles and axes
+        # Display the scatter plot
         st.plotly_chart(fig, use_container_width=True)
 
     # Display the scatter plot based on the selected option
