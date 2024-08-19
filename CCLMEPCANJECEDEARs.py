@@ -5,7 +5,7 @@ import plotly.express as px
 import numpy as np
 
 # Load the CSV file
-csv_file_path = "/mnt/data/CEDEARsratios.csv"
+csv_file_path = "CEDEARsratios.csv"
 data = pd.read_csv(csv_file_path)
 
 # Fetch the latest data from yfinance
