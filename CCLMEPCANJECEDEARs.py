@@ -67,15 +67,15 @@ if st.button("Enter"):
                 # Label using "CEDEAR ARS" without ".BA" suffix
                 labels.append(row["CEDEAR ARS"].replace(".BA", ""))
         
-        # Convert sizes to logarithmic scale
-        sizes = np.log(sizes)
+        # Use arithmetic scale for bubble sizes
+        sizes = np.array(sizes)
 
         # Calculate averages for X and Y axes
         x_avg = np.mean(x_values)
         y_avg = np.mean(y_values)
 
         # Create the scatter plot using Plotly
-        fig = px.scatter(x=x_values, y=y_values, size=sizes, hover_name=labels,
+        fig = px.scatter(x=x_values, y=y_values, size=sizes, text=labels,
                          labels={'x': 'X Axis', 'y': 'Y Axis'},
                          title=f'Scatter plot for {option} option',
                          size_max=50, log_y=True,
@@ -87,6 +87,9 @@ if st.button("Enter"):
                       line=dict(color="Red", width=2, dash="dash"))
         fig.add_shape(type="line", x0=min(x_values), x1=max(x_values), y0=y_avg, y1=y_avg,
                       line=dict(color="Blue", width=2, dash="dash"))
+
+        # Ensure the ticker labels are inside the bubbles
+        fig.update_traces(textposition='middle center')
 
         # Add sliders for adjusting percentiles and axes
         st.plotly_chart(fig, use_container_width=True)
