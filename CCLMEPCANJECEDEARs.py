@@ -79,7 +79,7 @@ if st.button("Enter"):
                          labels={'x': 'X Axis', 'y': 'Y Axis'},
                          title=f'Scatter plot for {option} option',
                          size_max=50, log_y=True,
-                         color=y_values,  # Use color to distinguish bubbles
+                         color=np.arange(len(x_values)),  # Use index for color to distinguish bubbles
                          color_continuous_scale='Viridis')
 
         # Add average lines for X and Y axes
@@ -90,6 +90,10 @@ if st.button("Enter"):
 
         # Ensure the ticker labels are inside the bubbles
         fig.update_traces(textposition='middle center')
+
+        # Add grid lines for both axes
+        fig.update_xaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
+        fig.update_yaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
 
         # Add sliders for adjusting percentiles and axes
         st.plotly_chart(fig, use_container_width=True)
