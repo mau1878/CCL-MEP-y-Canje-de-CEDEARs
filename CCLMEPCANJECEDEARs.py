@@ -25,14 +25,14 @@ def fetch_latest_data(tickers):
 tickers = set(data["CEDEAR ARS"].unique()) | set(data["CEDEAR D"].unique()) | set(data["Subyacente"].unique())
 tickers = [ticker + ".BA" for ticker in tickers]
 
-# Fetch the latest price and volume data
-latest_data = fetch_latest_data(tickers)
-
 # User selection: CCL, MEP, or Canje
 option = st.selectbox("Select the type of operation:", ["CCL", "MEP", "Canje"])
 
 # Add an "Enter" button
 if st.button("Enter"):
+    # Fetch the latest price and volume data after "Enter" is pressed
+    latest_data = fetch_latest_data(tickers)
+    
     # Define a function to create scatter plots based on the selected option
     def create_scatter_plot(option):
         x_values = []
