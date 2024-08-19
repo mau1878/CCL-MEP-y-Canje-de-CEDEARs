@@ -23,7 +23,6 @@ def fetch_latest_data(tickers):
 
 # Get unique tickers
 tickers = set(data["CEDEAR ARS"].unique()) | set(data["CEDEAR D"].unique()) | set(data["Subyacente"].unique())
-tickers = [ticker + ".BA" for ticker in tickers]
 
 # User selection: CCL, MEP, or Canje
 option = st.selectbox("Select the type of operation:", ["CCL", "MEP", "Canje"])
@@ -42,17 +41,17 @@ if st.button("Enter"):
 
         for _, row in data.iterrows():
             if option == "CCL":
-                x_value = latest_data.get(row["CEDEAR ARS"] + ".BA", {}).get("price", np.nan) * row["Ratio de conversión"] / latest_data.get(row["Subyacente"] + ".BA", {}).get("price", np.nan)
-                y_value = latest_data.get(row["CEDEAR ARS"] + ".BA", {}).get("volume", 0) * latest_data.get(row["CEDEAR ARS"] + ".BA", {}).get("price", 0)
+                x_value = latest_data.get(row["CEDEAR ARS"], {}).get("price", np.nan) * row["Ratio de conversión"] / latest_data.get(row["Subyacente"], {}).get("price", np.nan)
+                y_value = latest_data.get(row["CEDEAR ARS"], {}).get("volume", 0) * latest_data.get(row["CEDEAR ARS"], {}).get("price", 0)
                 size = y_value
             elif option == "MEP":
-                x_value = latest_data.get(row["CEDEAR ARS"] + ".BA", {}).get("price", np.nan) / latest_data.get(row["CEDEAR D"] + ".BA", {}).get("price", np.nan)
-                y_value = latest_data.get(row["CEDEAR D"] + ".BA", {}).get("volume", 0) * latest_data.get(row["CEDEAR D"] + ".BA", {}).get("price", 0)
+                x_value = latest_data.get(row["CEDEAR ARS"], {}).get("price", np.nan) / latest_data.get(row["CEDEAR D"], {}).get("price", np.nan)
+                y_value = latest_data.get(row["CEDEAR D"], {}).get("volume", 0) * latest_data.get(row["CEDEAR D"], {}).get("price", 0)
                 size = y_value
             elif option == "Canje":
-                x_value = latest_data.get(row["CEDEAR D"] + ".BA", {}).get("price", np.nan) * row["Ratio de conversión"] / latest_data.get(row["Subyacente"] + ".BA", {}).get("price", np.nan)
-                y_value = latest_data.get(row["CEDEAR ARS"] + ".BA", {}).get("price", np.nan) / latest_data.get(row["CEDEAR D"] + ".BA", {}).get("price", np.nan)
-                size = latest_data.get(row["CEDEAR D"] + ".BA", {}).get("volume", 0) * latest_data.get(row["CEDEAR D"] + ".BA", {}).get("price", 0)
+                x_value = latest_data.get(row["CEDEAR D"], {}).get("price", np.nan) * row["Ratio de conversión"] / latest_data.get(row["Subyacente"], {}).get("price", np.nan)
+                y_value = latest_data.get(row["CEDEAR ARS"], {}).get("price", np.nan) / latest_data.get(row["CEDEAR D"], {}).get("price", np.nan)
+                size = latest_data.get(row["CEDEAR D"], {}).get("volume", 0) * latest_data.get(row["CEDEAR D"], {}).get("price", 0)
             
             if not np.isnan(x_value) and not np.isnan(y_value):
                 x_values.append(x_value)
