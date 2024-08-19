@@ -71,8 +71,9 @@ if st.button("Enter"):
                 # Label using "CEDEAR ARS" without ".BA" suffix
                 labels.append(row["CEDEAR ARS"].replace(".BA", ""))
         
-        # Use arithmetic scale for bubble sizes
+        # Normalize sizes for better visualization
         sizes = np.array(sizes)
+        sizes = (sizes - np.min(sizes)) / (np.max(sizes) - np.min(sizes)) * 100  # Normalize to a range [0, 100]
 
         # Calculate averages for X and Y axes
         x_avg = np.mean(x_values)
