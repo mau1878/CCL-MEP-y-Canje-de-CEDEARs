@@ -33,6 +33,10 @@ def get_required_tickers(option):
 # User selection: CCL, MEP, or Canje
 option = st.selectbox("Select the type of operation:", ["CCL", "MEP", "Canje"])
 
+# Add options for font sizes
+axis_font_size = st.slider("Select font size for axis labels:", 10, 30, 14)
+hover_font_size = st.slider("Select font size for hover text:", 10, 30, 12)
+
 # Add an "Enter" button
 if st.button("Enter"):
     # Fetch only the necessary data after "Enter" is pressed
@@ -76,7 +80,8 @@ if st.button("Enter"):
 
         # Create the scatter plot using Plotly
         fig = px.scatter(x=x_values, y=y_values, size=sizes, text=labels,
-                         labels={'x': 'X Axis', 'y': 'Y Axis'},
+                         labels={'x': 'USD CCL' if option == "CCL" else 'X Axis',
+                                 'y': 'Volumen en pesos' if option == "CCL" else 'Y Axis'},
                          title=f'Scatter plot for {option} option',
                          size_max=50, log_y=True,
                          color=np.arange(len(x_values)),  # Use index for color to distinguish bubbles
@@ -89,11 +94,17 @@ if st.button("Enter"):
                       line=dict(color="Blue", width=2, dash="dash"))
 
         # Ensure the ticker labels are inside the bubbles
-        fig.update_traces(textposition='middle center')
+        fig.update_traces(textposition='middle center', marker=dict(sizemode='diameter', opacity=0.8))
 
         # Add grid lines for both axes
-        fig.update_xaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
-        fig.update_yaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
+        fig.update_xaxes(showgrid=True, gridcolor='LightGray', gridwidth=1, tickfont=dict(size=axis_font_size))
+        fig.update_yaxes(showgrid=True, gridcolor='LightGray', gridwidth=1, tickfont=dict(size=axis_font_size))
+
+        # Adjust hover text font size
+        fig.update_traces(marker=dict(sizemode='diameter', opacity=0.8),
+                          selector=dict(mode='markers+text'))
+        fig.update_traces(hovertemplate="<b>%{text}</b><br>Price: %{x}<br>Volume: %{y}<br>Size: %{marker.size}",
+                          hoverlabel=dict(font_size=hover_font_size))
 
         # Add sliders for adjusting percentiles and axes
         st.plotly_chart(fig, use_container_width=True)
