@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
-import plotly.express as px
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load the CSV file
 csv_file_path = "CEDEARsratios.csv"
@@ -45,7 +46,7 @@ if st.button("Enter"):
         y_values = []
         sizes = []
         labels = []
-
+    
         for _, row in data.iterrows():
             if option == "CCL":
                 x_value = latest_data.get(row["CEDEAR ARS"], {}).get("price", np.nan) * row["Ratio de conversión"] / latest_data.get(row["Subyacente"], {}).get("price", np.nan)
@@ -66,37 +67,55 @@ if st.button("Enter"):
                 sizes.append(size)
                 # Label using "CEDEAR ARS" without ".BA" suffix
                 labels.append(row["CEDEAR ARS"].replace(".BA", ""))
-        
+    
         # Use arithmetic scale for bubble sizes
         sizes = np.array(sizes)
-
+        
+        # Adjust sizes for plotting (since sizes in plt.scatter are in points^2)
+        # Let's normalize sizes to have a reasonable size on the plot
+        # For example, we can normalize sizes between 50 and 2000 points^2
+        min_size = 50
+        max_size = 2000
+        size_min = sizes.min()
+        size_max = sizes.max()
+        if size_max - size_min > 0:
+            sizes_scaled = min_size + (sizes - size_min) * (max_size - min_size) / (size_max - size_min)
+        else:
+            sizes_scaled = np.full_like(sizes, min_size)
+        
         # Calculate averages for X and Y axes
         x_avg = np.mean(x_values)
         y_avg = np.mean(y_values)
-
-        # Create the scatter plot using Plotly
-        fig = px.scatter(x=x_values, y=y_values, size=sizes, text=labels,
-                         labels={'x': 'USD CCL' if option == 'CCL' else 'X Axis', 'y': 'Y Axis'},
-                         title=f'Scatter plot for {option} option',
-                         size_max=50, log_y=True,
-                         color=np.arange(len(x_values)),  # Use index for color to distinguish bubbles
-                         color_continuous_scale='Viridis')
-
+        
+        # Create the scatter plot using matplotlib
+        fig, ax = plt.subplots(figsize=(10, 6))
+    
+        scatter = ax.scatter(x_values, y_values, s=sizes_scaled, c=np.arange(len(x_values)), cmap='viridis', alpha=0.6)
+    
+        # Add labels inside the bubbles
+        for i, label in enumerate(labels):
+            ax.text(x_values[i], y_values[i], label, ha='center', va='center', fontsize=8)
+    
         # Add average lines for X and Y axes
-        fig.add_shape(type="line", x0=x_avg, x1=x_avg, y0=min(y_values), y1=max(y_values),
-                      line=dict(color="Red", width=2, dash="dash"))
-        fig.add_shape(type="line", x0=min(x_values), x1=max(x_values), y0=y_avg, y1=y_avg,
-                      line=dict(color="Blue", width=2, dash="dash"))
-
-        # Ensure the ticker labels are inside the bubbles
-        fig.update_traces(textposition='middle center')
-
+        ax.axvline(x=x_avg, color='red', linestyle='--', linewidth=1)
+        ax.axhline(y=y_avg, color='blue', linestyle='--', linewidth=1)
+    
+        # Set logarithmic scale for Y axis if required
+        ax.set_yscale('log')
+    
         # Add grid lines for both axes
-        fig.update_xaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
-        fig.update_yaxes(showgrid=True, gridcolor='LightGray', gridwidth=1)
-
-        # Add sliders for adjusting percentiles and axes
-        st.plotly_chart(fig, use_container_width=True)
-
+        ax.grid(True, which='both', linestyle='-', linewidth=0.5, color='lightgray')
+    
+        # Set labels and title
+        ax.set_xlabel('USD CCL' if option == 'CCL' else 'X Axis')
+        ax.set_ylabel('Y Axis')
+        ax.set_title(f'Scatter plot for {option} option')
+    
+        # Adjust layout
+        plt.tight_layout()
+    
+        # Display the plot in Streamlit
+        st.pyplot(fig)
+    
     # Display the scatter plot based on the selected option
     create_scatter_plot(option)
