@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Load the CSV file and clean duplicate headers
 csv_file_path = "CEDEARsratios.csv"
@@ -63,7 +63,7 @@ def get_required_tickers(option, data):
   return tickers
 
 # Define a function to create scatter plots based on the selected option
-def create_scatter_plot(option, data, latest_data):
+def create_scatter_plot(option, data, latest_data, log_scale, exclude_outliers):
   x_values = []
   y_values = []
   sizes = []
@@ -118,42 +118,48 @@ def create_scatter_plot(option, data, latest_data):
       st.warning("No data available to plot.")
       return
 
+  # Convert to numpy arrays for processing
+  x_values = np.array(x_values)
+  y_values = np.array(y_values)
   sizes = np.array(sizes)
-  x_avg = np.mean(x_values)
-  y_avg = np.mean(y_values)
 
-  fig, ax = plt.subplots(figsize=(10, 6))
-  scatter = ax.scatter(x=x_values, y=y_values, s=sizes / 1e6, alpha=0.5)
+  # Exclude outliers if selected
+  if exclude_outliers:
+      q1 = np.percentile(y_values, 25)
+      q3 = np.percentile(y_values, 75)
+      iqr = q3 - q1
+      lower_bound = q1 - 1.5 * iqr
+      upper_bound = q3 + 1.5 * iqr
+      mask = (y_values >= lower_bound) & (y_values <= upper_bound)
+      x_values = x_values[mask]
+      y_values = y_values[mask]
+      sizes = sizes[mask]
+      labels = [labels[i] for i in range(len(labels)) if mask[i]]
 
-  # Add average lines for X and Y axes
-  ax.axvline(x_avg, color="red", linestyle="--", linewidth=2)
-  ax.axhline(y_avg, color="blue", linestyle="--", linewidth=2)
+  # Create the scatter plot using Plotly
+  fig = px.scatter(
+      x=x_values,
+      y=y_values,
+      size=sizes / 1e6,  # Scale sizes for better visibility
+      hover_name=labels,
+      labels={'x': 'X Axis', 'y': 'Y Axis'},
+      title=f'Scatter Plot for {option} Option'
+  )
 
-  # Add labels
-  for i, label in enumerate(labels):
-      ax.text(x_values[i], y_values[i], label, ha='center', va='center')
+  # Set logarithmic scale if selected
+  if log_scale:
+      fig.update_xaxes(type="log")
+      fig.update_yaxes(type="log")
 
-  # Set labels and title
-  if option == 'CCL':
-      ax.set_xlabel('USD CCL')
-      ax.set_ylabel('Volume in ARS')
-  elif option == 'MEP':
-      ax.set_xlabel('Price Ratio CEDEAR ARS / CEDEAR D')
-      ax.set_ylabel('Volume in USD')
-  elif option == 'Canje':
-      ax.set_xlabel('Converted Price Ratio')
-      ax.set_ylabel('Price Ratio CEDEAR ARS / CEDEAR D')
-  else:
-      ax.set_xlabel('X Axis')
-      ax.set_ylabel('Y Axis')
-
-  ax.set_title(f'Scatter Plot for {option} Option')
-
-  ax.grid(True, which='both', color='lightgray', linestyle='-', linewidth=0.5)
-  st.pyplot(fig)
+  # Show the plot in Streamlit
+  st.plotly_chart(fig)
 
 # User selection: CCL, MEP, or Canje
 option = st.selectbox("Select the type of operation:", ["CCL", "MEP", "Canje"])
+
+# Add options for logarithmic scale and outlier exclusion
+log_scale = st.checkbox("Use logarithmic scale for axes")
+exclude_outliers = st.checkbox("Exclude outliers")
 
 # Add an "Enter" button
 if st.button("Enter"):
@@ -162,4 +168,4 @@ if st.button("Enter"):
   st.write(f"Fetching data for tickers: {tickers}")
   latest_data = fetch_latest_data(tickers)
   # Display the scatter plot based on the selected option
-  create_scatter_plot(option, data, latest_data)
+  create_scatter_plot(option, data, latest_data, log_scale, exclude_outliers)
